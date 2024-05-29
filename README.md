@@ -2,33 +2,33 @@ Raydium CPI adapters are suitable for different Anchor versions. For the stabili
 
 ## Environmental requirements
 ```
-solana-cli 1.17.0
-anchor-cli 0.29.0
+solana-cli 1.18.26
+anchor-cli 0.30.1
 ```
 
 ## Usage
 Call CLMM through CPI.
 ```
 [dependencies]
-anchor-lang = "=0.29.0"
-anchor-spl = "=0.29.0"
-raydium_clmm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-clmm-cpi", branch = "anchor-0.29.0" }
+anchor-lang = "=0.30.1"
+anchor-spl = "=0.30.1"
+raydium_clmm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-clmm-cpi", branch = "anchor-0.30.1" }
 ```
 
 Call CPMM through CPI.
 ```
 [dependencies]
-anchor-lang = "=0.29.0"
-anchor-spl = "=0.29.0"
-raydium_cpmm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.29.0" }
+anchor-lang = "=0.30.1"
+anchor-spl = "=0.30.1"
+raydium_cpmm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-cpmm-cpi", branch = "anchor-0.30.1" }
 ```
 
 Call AMM through CPI.
 ```
 [dependencies]
-anchor-lang = "=0.29.0"
-anchor-spl = "=0.29.0"
-raydium_amm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-amm-cpi", branch = "anchor-0.29.0" }
+anchor-lang = "=0.30.1"
+anchor-spl = "=0.30.1"
+raydium_amm_cpi = { git = "https://github.com:raydium-io/raydium-cpi", package = "raydium-amm-cpi", branch = "anchor-0.30.1" }
 ```
 
 You can find usage examples in this [repository](https://github.com/raydium-io/raydium-cpi-example).

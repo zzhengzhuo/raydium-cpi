@@ -1,10 +1,11 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::Token;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface,Token2022};
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::metadata::Metadata;
 use crate::states::*;
+use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::memo::Memo;
+use anchor_spl::metadata::Metadata;
 use anchor_spl::token;
+use anchor_spl::token::Token;
+use anchor_spl::token_interface::{Mint, Token2022, TokenAccount, TokenInterface};
 #[derive(Accounts)]
 pub struct CreatePool<'info> {
     /// Address paying to create the pool. Can be anyone
@@ -29,7 +30,7 @@ pub struct CreatePool<'info> {
     )]
     pub pool_state: AccountLoader<'info, PoolState>,
 
-    /// Token_0 mint, the key must grater then token_1 mint.
+    /// Token_0 mint, the key must smaller then token_1 mint.
     #[account(
         constraint = token_mint_0.key() < token_mint_1.key(),
         mint::token_program = token_program_0
@@ -43,36 +44,42 @@ pub struct CreatePool<'info> {
     pub token_mint_1: Box<InterfaceAccount<'info, Mint>>,
 
     /// Token_0 vault for the pool
+    /// CHECK: The account is created internally by the contract, and removing `init` is just to bypass the stack overflow check (due to anchor; they will fix this issue later).
     #[account(
-        init,
+        // init,
+        mut,
         seeds =[
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
             token_mint_0.key().as_ref(),
         ],
         bump,
-        payer = pool_creator,
-        token::mint = token_mint_0,
-        token::authority = pool_state,
-        token::token_program = token_program_0,
+        // payer = pool_creator,
+        // token::mint = token_mint_0,
+        // token::authority = pool_state,
+        // token::token_program = token_program_0,
     )]
-    pub token_vault_0: Box<InterfaceAccount<'info, TokenAccount>>,
+    // pub token_vault_0: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub token_vault_0: UncheckedAccount<'info>,
 
     /// Token_1 vault for the pool
+    /// CHECK:The account is created internally by the contract, and removing `init` is just to bypass the stack overflow check (due to anchor; they will fix this issue later).
     #[account(
-        init,
+        // init,
+        mut,
         seeds =[
             POOL_VAULT_SEED.as_bytes(),
             pool_state.key().as_ref(),
             token_mint_1.key().as_ref(),
         ],
         bump,
-        payer = pool_creator,
-        token::mint = token_mint_1,
-        token::authority = pool_state,
-        token::token_program = token_program_1,
+        // payer = pool_creator,
+        // token::mint = token_mint_1,
+        // token::authority = pool_state,
+        // token::token_program = token_program_1,
     )]
-    pub token_vault_1: Box<InterfaceAccount<'info, TokenAccount>>,
+    // pub token_vault_1: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub token_vault_1: UncheckedAccount<'info>,
 
     /// Initialize an account to store oracle observations
     #[account(
@@ -110,7 +117,6 @@ pub struct CreatePool<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-
 #[derive(Accounts)]
 #[instruction(tick_lower_index: i32, tick_upper_index: i32,tick_array_lower_start_index:i32,tick_array_upper_start_index:i32)]
 pub struct OpenPosition<'info> {
@@ -122,17 +128,19 @@ pub struct OpenPosition<'info> {
     pub position_nft_owner: UncheckedAccount<'info>,
 
     /// Unique token mint address
+    /// CHECK:The account is created internally by the contract, and removing `init` is just to bypass the stack overflow check (due to anchor; they will fix this issue later).
     #[account(
-        init,
-        mint::decimals = 0,
-        mint::authority = pool_state.key(),
-        payer = payer,
-        mint::token_program = token_program,
+        mut,
+        // init,
+        // mint::decimals = 0,
+        // mint::authority = pool_state.key(),
+        // payer = payer,
+        // mint::token_program = token_program,
     )]
-    pub position_nft_mint: Box<InterfaceAccount<'info, Mint>>,
+    // pub position_nft_mint: Box<InterfaceAccount<'info, Mint>>,
+    pub position_nft_mint: Signer<'info>,
 
     /// Token account where position NFT will be minted
-    /// This account created in the contract by cpi to avoid large stack variables
     #[account(
         init,
         associated_token::mint = position_nft_mint,
@@ -166,7 +174,7 @@ pub struct OpenPosition<'info> {
     )]
     pub protocol_position: Box<Account<'info, ProtocolPositionState>>,
 
-    /// CHECK: Account to mark the lower tick as initialized
+    /// CHECK: Account to store data for the position's lower tick
     #[account(
         mut,
         seeds = [
@@ -178,7 +186,7 @@ pub struct OpenPosition<'info> {
     )]
     pub tick_array_lower: UncheckedAccount<'info>,
 
-    /// CHECK:Account to store data for the position's upper tick
+    /// CHECK: Account to store data for the position's upper tick
     #[account(
         mut,
         seeds = [
@@ -200,14 +208,14 @@ pub struct OpenPosition<'info> {
     )]
     pub personal_position: Box<Account<'info, PersonalPositionState>>,
 
-    /// The token_0 account deposit token to the pool
+    /// The user token_0 account deposit token to the pool
     #[account(
         mut,
         token::mint = token_vault_0.mint
     )]
     pub token_account_0: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// The token_1 account deposit token to the pool
+    /// The user token_1 account deposit token to the pool
     #[account(
         mut,
         token::mint = token_vault_1.mint
@@ -264,25 +272,30 @@ pub struct OpenPositionV2<'info> {
     pub position_nft_owner: UncheckedAccount<'info>,
 
     /// Unique token mint address
+    /// CHECK:The account is created internally by the contract, and removing `init` is just to bypass the stack overflow check (due to anchor; they will fix this issue later).
     #[account(
-        init,
-        mint::decimals = 0,
-        mint::authority = pool_state.key(),
-        payer = payer,
-        mint::token_program = token_program,
+        mut,
+        // init,
+        // mint::decimals = 0,
+        // mint::authority = pool_state.key(),
+        // payer = payer,
+        // mint::token_program = token_program,
     )]
-    pub position_nft_mint: Box<InterfaceAccount<'info, Mint>>,
+    // pub position_nft_mint: Box<InterfaceAccount<'info, Mint>>,
+    pub position_nft_mint: Signer<'info>,
 
     /// Token account where position NFT will be minted
-    /// This account created in the contract by cpi to avoid large stack variables
+    /// CHECK:The account is created internally by the contract, and removing `init` is just to bypass the stack overflow check (due to anchor; they will fix this issue later).
     #[account(
-        init,
-        associated_token::mint = position_nft_mint,
-        associated_token::authority = position_nft_owner,
-        payer = payer,
-        token::token_program = token_program,
+        mut,
+        // init,
+        // associated_token::mint = position_nft_mint,
+        // associated_token::authority = position_nft_owner,
+        // payer = payer,
+        // token::token_program = token_program,
     )]
-    pub position_nft_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    // pub position_nft_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    pub position_nft_account: UncheckedAccount<'info>,
 
     /// To store metaplex metadata
     /// CHECK: Safety check performed inside function body
@@ -308,7 +321,7 @@ pub struct OpenPositionV2<'info> {
     )]
     pub protocol_position: Box<Account<'info, ProtocolPositionState>>,
 
-    /// CHECK: Account to mark the lower tick as initialized
+    /// CHECK: Account to store data for the position's lower tick
     #[account(
         mut,
         seeds = [
@@ -320,7 +333,7 @@ pub struct OpenPositionV2<'info> {
     )]
     pub tick_array_lower: UncheckedAccount<'info>,
 
-    /// CHECK:Account to store data for the position's upper tick
+    /// CHECK: Account to store data for the position's upper tick
     #[account(
         mut,
         seeds = [
@@ -342,14 +355,14 @@ pub struct OpenPositionV2<'info> {
     )]
     pub personal_position: Box<Account<'info, PersonalPositionState>>,
 
-    /// The token_0 account deposit token to the pool
+    /// The user token_0 account deposit token to the pool
     #[account(
         mut,
         token::mint = token_vault_0.mint
     )]
     pub token_account_0: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// The token_1 account deposit token to the pool
+    /// The user token_1 account deposit token to the pool
     #[account(
         mut,
         token::mint = token_vault_1.mint
@@ -452,7 +465,6 @@ pub struct ClosePosition<'info> {
     // /// Reserved for upgrade
     // pub token_program_2022: Program<'info, Token2022>,
 }
-
 
 #[derive(Accounts)]
 pub struct IncreaseLiquidity<'info> {
@@ -630,7 +642,6 @@ pub struct IncreaseLiquidityV2<'info> {
     // pub tick_array_bitmap: AccountLoader<'info, TickArrayBitmapExtension>,
 }
 
-
 #[derive(Accounts)]
 pub struct DecreaseLiquidity<'info> {
     /// The position owner or delegated authority
@@ -786,11 +797,7 @@ pub struct DecreaseLiquidityV2<'info> {
     pub token_program_2022: Program<'info, Token2022>,
 
     /// memo program
-    /// CHECK:
-    #[account(
-        address = spl_memo::id()
-    )]
-    pub memo_program: UncheckedAccount<'info>,
+    pub memo_program: Program<'info, Memo>,
 
     /// The mint of token vault 0
     #[account(
@@ -838,7 +845,6 @@ pub struct SwapRouterBaseIn<'info> {
     // )]
     pub memo_program: UncheckedAccount<'info>,
 }
-
 
 #[derive(Accounts)]
 pub struct SwapSingle<'info> {
@@ -931,11 +937,8 @@ pub struct SwapSingleV2<'info> {
     /// SPL program 2022 for token transfers
     pub token_program_2022: Program<'info, Token2022>,
 
-    /// CHECK:
-    #[account(
-        address = spl_memo::id()
-    )]
-    pub memo_program: UncheckedAccount<'info>,
+    /// memo program
+    pub memo_program: Program<'info, Memo>,
 
     /// The mint of token vault 0
     #[account(
@@ -978,13 +981,8 @@ pub struct CollectRemainingRewards<'info> {
     pub token_program_2022: Program<'info, Token2022>,
 
     /// memo program
-    /// CHECK:
-    #[account(
-        address = spl_memo::id()
-    )]
-    pub memo_program: UncheckedAccount<'info>,
+    pub memo_program: Program<'info, Memo>,
 }
-
 
 #[derive(Accounts)]
 pub struct UpdateRewardInfos<'info> {
