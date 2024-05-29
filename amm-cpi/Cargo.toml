@@ -1,0 +1,18 @@
+[package]
+name = "raydium-amm-cpi"
+version = "0.1.0"
+description = "CPI adapter for Raydium AMM"
+edition = "2021"
+
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "raydium_amm_cpi"
+
+[features]
+devnet = []
+
+[dependencies]
+raydium-contract-instructions = { git = "https://github.com/raydium-io/raydium-contract-instructions" }
+anchor-lang = "=0.29.0"
+anchor-spl = "=0.29.0"
