@@ -1,11 +1,10 @@
 use crate::states::*;
-use anchor_lang::{
-    accounts::interface_account::InterfaceAccount,
-    prelude::*,};
+use anchor_lang::{accounts::interface_account::InterfaceAccount, prelude::*};
 use anchor_spl::{
     associated_token::AssociatedToken,
+    memo::Memo,
     token::Token,
-    token_interface::{Mint, TokenAccount, TokenInterface,Token2022},
+    token_interface::{Mint, Token2022, TokenAccount, TokenInterface},
 };
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -252,7 +251,7 @@ pub struct Withdraw<'info> {
     )]
     pub owner_lp_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    /// The token account for receive token_0, 
+    /// The token account for receive token_0,
     #[account(
         mut,
         token::mint = token_0_vault.mint,
@@ -306,13 +305,8 @@ pub struct Withdraw<'info> {
     pub lp_mint: Box<InterfaceAccount<'info, Mint>>,
 
     /// memo program
-    /// CHECK:
-    #[account(
-        address = spl_memo::id()
-    )]
-    pub memo_program: UncheckedAccount<'info>,
+    pub memo_program: Program<'info, Memo>,
 }
-
 
 #[derive(Accounts)]
 pub struct Swap<'info> {

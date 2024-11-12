@@ -2,16 +2,21 @@
 
 #![allow(clippy::too_many_arguments)]
 
-use solana_program::{
-    instruction::{AccountMeta, Instruction},
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    sysvar,
+use anchor_lang::{
+    prelude::declare_id,
+    solana_program::{
+        self,
+        instruction::{AccountMeta, Instruction},
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        sysvar,
+    },
 };
+use anchor_spl::{associated_token::spl_associated_token_account, token::spl_token};
 use std::convert::TryInto;
 use std::mem::size_of;
 
-solana_program::declare_id!("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
+declare_id!("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
